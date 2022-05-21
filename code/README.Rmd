@@ -1,0 +1,231 @@
+---
+title: "¿Han emitido su voto todas las señoras y señores convencionales? Estimación de la eficacia relativa al momento de votar de cada miembro de la Convención Constitucional"
+author: "Jorge Fábrega - CICS - Facultad de Gobierno - UDD"
+date: "20-05-2022"
+output: html_document
+---
+
+# Introducción
+
+Cada convencional va dejando huellas de su desempeño como miembro del cuerpo colegiado a medida que va votando $a$ $favor$, $en$ $contra$ o $abstención$ frente a cada artículo o inciso. Cabe entonces preguntarse ¿quiénes son los que al final logran un mejor desempeño o, dicho de otro modo, quiénes son los que demuestran un rol más relevante en las decisiones tomadas por la convención? 
+
+Esta disyuntiva se puede enfrentar con un análisis ex-ante o un análisis ex-post. En un análisis ex-ante, lo que hacemos es identificar a los actores pivotales a partir de sus preferencias ideológicas y dadas las reglas de votación. Para un ejercicio de ese tipo aplicado a la Convención Constitucional véase [aquí](https://www.researchgate.net/project/Polarizacion-en-Chile/update/61211191181c2e4f4a8236fa). Ese tipo de análisis entrega una idea general de la distribución de poder dentro de un cuerpo colegiado como la Convención. Y es relevante para entender la dirección general que tomarán las decisiones colectivas que se den en dicha instancia (más al respecto puede verse en Fábrega 2022, [aqui](http://rda.uc.cl/index.php/rcp/article/view/50189).
+
+En un análisis ex-post, observamos las votaciones y calculamos quienes una vez consumados los hechos tuvieron una posición de mayor relevancia. Los resultados en términos generales deberían coincidir con los obtenidos mediante un análisis ex-ante, pero no serán necesariamente iguales porque si bien es cierto que el votante pivotal es central en el resultado, no es menos cierto que no todas las reglas aprobadas obtienen exactamente el mínimo quórum requerido. 
+
+En particular, la decisión de un convencional (pivotal o no) de votar a favor o en contra en el debate de normas específicas no está completamente explicado por su preferencia ideológica. Por ejemplo, el intercambio de favores puede llevar a dos convencionales a apoyar mutuamente ideas que, en principio, están más alejadas de sus preferencias ideológicas en un intercambio mutuamente beneficioso ("voto por tu idea en X, pero tú votas por mi idea en Y"). Así mismo, abstenerse de apoyar una iniciativa presentada por los miembros de tu propia lista o coalición puede deberse, por ejemplo, a un comportamiento estratégico que desea evitar un costo político individual. Alternativamente, un convencional podría decidir abstenerse para quedar en una mejor posición negociadora en la siguiente etapa de evaluación de una propuesta de norma. Y también es posible imaginar otras variantes respecto del voto de abstención, introduciendo nuevas fuentes de variación para explicar cómo votan los convencionales. 
+
+Para explorar estos aspectos, y dado que ha culminado la etapa de generación de contenidos de la Convención Constitucional, en el presente documento calculo lo que denominaré la $eficacia$ $relativa$ $al$ $votar$ de cada convencional. 
+
+Sea $j$ un convencional, $V_j = ('A Favor','En contra', 'Abstención')$ sus opciones de votación y $S = ('Aprobado', 'Rechazado')$ los posibles resultados de la votación. Entonces, $V_j = 'A Favor'$ cuando $S='Aprobado'$ y $V_j = 'En Contra'$ cuando $S='Rechazado'$ contribuyen a la eficacia del convencional al votar porque habría votado alineado con el resultado de la votación. 
+
+$NOTA$: Hago el hincapié que es una métrica de eficacia $al$ $votar$ para distinguirla de la eficacia legislativa que se refiere a la capacidad de cada convencional de lograr que las normas que él o ella impulsó sean finalmente aprobadas. 
+
+El caso en el que el convencional se haya abstenido amerita un trato especial. Los motivos para abstenerse pueden variar desde (i) no estar convencido sobre el articulado, (ii) no tener una opinión formada sobre el mismo o incluso (iii) el que decidir apoyarlo o rechazarlo explícitamente puede ir en contra de las propias declaraciones o acciones pasadas y, por lo tanto, el o la convencional preferiría no aparecer tomando una acción contradictoria. En el primer y segundo caso, el abstenerse se ajusta al significado explícito de la opción “Abstención”, pero en el último estamos frente a un comportamiento estratégico. La relevancia de esta distinción es que, cuando un convencional se abstiene con el objeto de evitar que se apruebe una norma en su actual formulación, su abstención no sólo es estratégica, sino que también es eficaz (en el caso de que ésta sea rechazada). Por ende, tal abstención debería considerarse como parte del cálculo de su eficacia al votar. Esto impone un desafío sobre cómo distinguir cuáles abstenciones son estratégicas y cuáles no.
+
+Para identificar abstenciones estratégicas, supongamos que $F$ y $C$ representan a los votantes medianos entre los que votaron 'A Favor' y 'En Contra', respectivamente. Además, definamos $I_j$ como la preferencia ideológica del individuo $j$. 
+
+Entonces, consideraremos como abstención estratégica a aquella acción del convencional $j$ tal que $|I_F - I_j| < |I_C - I_j|$. Es decir, el convencional $j$ decide abstenerse pese a que la posición mediana a favor de la propuesta de norma está más cerca de su ideal, que la posición mediana que está en contra. En este caso particular, el o la convencional no estará apoyando una norma que, en principio, mueve los resultados más cerca de su propia postura y, por ende, puede ser un buen proxy de comportamiento estratégico. De este modo, si en $100$ votos, un convencional estuvo en el bando ganador $70$ veces y en 5 ocasiones se abstuvo, pero sólo en 2 de ellas lo hizo por razones estatrégicas, entonces su eficacia estimada es de $(70 + 2)/100 = 72\%$.  
+
+# Datos
+Para implementar la métrica de $eficacia$ $al$ $votar$ indicada en la sección anterior, hacemos uso de los datos de votaciones de los plenos de la Convención Constitucional disponibles en [Sala Constituyente](https://sala.cconstituyente.cl/). Para el presente ejercicio se han usado todas las votaciones plenarias hasta el 14 de mayo del 2022 (fecha en que se dio por finalizada la etapa de deliberación en torno a los contenidos del texto). Se consideraron todas las votaciones en que las alternativas eran votar "A favor", "En Contra" o "Abstención". (Nota: las únicas votaciones que no cumplen con este criterio son las relacionadas a la elección de la mesa directiva de la convención en las que se votaba por personas). 
+
+
+```{r setup, include=FALSE}
+require(here)
+require(readxl)
+aqui <- here()
+aqui_subproj <- sub("subproj/convencion_eficacia","",aqui)
+```
+
+```{r correlacion, echo=FALSE, include=FALSE}
+eficacia <- read.csv(paste0(aqui,"/data/scrap_eficacia.csv"), sep=";")
+eficacia <- eficacia[-c(1,2),]
+eficacia$V1 <- gsub(";",",",eficacia$V1)
+eficacia$eficaciatotal <- gsub(",",".",eficacia$eficaciatotal)
+eficacia$eficaciatotal <- as.numeric(eficacia$eficaciatotal)
+colnames(eficacia)[2] <- c("nombres")
+# colnames(eficacia) <- c("n","nombres","e_reglamento","e_intermedio","e_texto","e_reglamento_sin","e_intermedio_sin","e_texto_sin")
+
+archivo_votos_usado <- "scrap_votos_plenario.csv"
+aqui_subproj <- sub("subproj/convencion_eficacia","",aqui)
+ideologia <- read.csv(paste0(aqui_subproj,"/data/tabla_resumen_estimacion_pscl_May_19.csv"))
+ideologia <- ideologia[,-c(1)]
+
+for(k in 1:NROW(ideologia)){
+  ideologia$nombres[k] <- ifelse(ideologia$nombres[k]=="Vidal, Rossana",'Vidal, Loreto',ideologia$nombres[k])
+  ideologia$nombres[k] <- ifelse(ideologia$nombres[k]=="Martín, Juan José",'Martin, Juan José',ideologia$nombres[k])
+  ideologia$nombres[k] <- ifelse(ideologia$nombres[k]=="González, Dayana",'González, Dayyana',ideologia$nombres[k])
+}
+
+
+comparado <- merge(eficacia,ideologia)
+```
+
+# Resultados
+El resultado se resume en la figura 1; se ordenan los convencionales en forma ascendente desde el que tuvo una menor eficacia (Jorge Arancibia) al que tuvo la mayor (Ricardo Montero). 
+
+
+![Eficacia](D:/varios/convencion_constitucional/subproj/convencion_eficacia/plots/eficacia_todos.png)
+
+Una rápida inspección de la figura permite constatar que la eficacia al votar de los convencionales vinculados a la derecha ideológica es sistemáticamente menor que la de los convencionales vinculados a la izquierda ideológica, lo cual es consistente con el desarrollo general que ha mostrado la Convención Constitucional. De hecho, el resultado presenta una alta pero no perfecta correlación inversa con la posición ideológica ($\rho$ = `r cor(comparado$eficaciatotal, comparado$ideologia, method = "pearson", use = "complete.obs")`). Sin perjuicio de lo anterior, la figura también muestra que la relación no es lineal sino que hay dispersión de la eficacia, particularmente en la izquierda de la Convención. Ello amerita que se haga una indagación más específica al interior de cada grupo de convencionales.
+
+```{r correlacion_cor_1, echo=FALSE, include=FALSE}
+png(paste0(aqui,"/plots/efic_ideol.png"), height = 800, width = 600)
+plot(comparado$eficaciatotal, comparado$ideologia,
+     main = "Eficacia legislativa según ideología del/la convencional",
+     ylab = "<-- Izquierda ---------------- Derecha -->",
+     xlab = "Eficacia",
+     ylim = c(-1,1),
+     xlim = c(30, 100),
+     pch = 19,
+     col = "red",
+     yaxt = "n")
+text(comparado$eficaciatotal[98]+7,comparado$ideologia[98],labels = comparado$nombres[98],cex=0.8, col="blue")
+text(comparado$eficaciatotal[126]+8,comparado$ideologia[126],labels = comparado$nombres[126],cex=0.8, col="blue")
+text(comparado$eficaciatotal[12]+7,comparado$ideologia[12],labels = comparado$nombres[12],cex=0.8, col="blue")
+text(comparado$eficaciatotal[23]+9,comparado$ideologia[23],labels = comparado$nombres[23],cex=0.8, col="blue")
+points(comparado$eficaciatotal[98],comparado$ideologia[98],col="blue", pch=19)
+points(comparado$eficaciatotal[126],comparado$ideologia[126],col="blue", pch=19)
+points(comparado$eficaciatotal[12],comparado$ideologia[12],col="blue", pch=19)
+points(comparado$eficaciatotal[23],comparado$ideologia[23],col="blue", pch=19)
+
+
+
+dev.off()
+
+
+
+```
+
+![Ideología y Eficacia](D:/varios/convencion_constitucional/subproj/convencion_eficacia/plots/efic_ideol.png)
+
+## Una mirada a la eficacia en grupos seleccionados
+
+En el funcionamiento de la Convención Constitucional han tenido un rol gravitante los miembros del Colectivo Socialista y el Frente Amplio. Ello era esperable puesto que estos grupos son los que se encuentran en posiciones ideológicas pivotales. Focalicemos el análisis en estos grupos ¿cómo ha sido su eficacia al votar en relación con la de otros grupos?  
+
+```{r comparado_grupos,echo=FALSE, include=FALSE}
+
+veces <- read.csv(paste0(aqui,"/data/scrap_eficacia.csv"),sep=";")
+veces <- veces[-c(1:2),]
+veces$V1 <- gsub(";",",",veces$V1)
+colnames(veces) <- c("num","nombre","eficacia","estrategico","eficacia_total")
+base_votos <- length(list.files(paste0(aqui_subproj,"/data/votaciones_plenario/")))
+atributos <- read.csv(paste0(aqui_subproj,"/data/atributos_electos.csv"),sep=";")
+membresias <- read_excel((paste0(aqui_subproj,"data/membresias_convencion.xlsx")))
+
+for(k in 1:NROW(atributos)){
+  atributos$nombre[k] <- ifelse(atributos$nombre[k]=="Vidal, Rossana",'Vidal, Loreto',atributos$nombre[k])
+  atributos$nombre[k] <- ifelse(atributos$nombre[k]=="Martín, Juan José",'Martin, Juan José',atributos$nombre[k])
+  atributos$nombre[k] <- ifelse(atributos$nombre[k]=="González, Dayana",'González, Dayyana',atributos$nombre[k])
+  atributos$nombre[k] <- ifelse(atributos$nombre[k]=="Zúñiga, Luis Arturo",'Zúñiga, Luis',atributos$nombre[k])
+}
+
+for(k in 1:NROW(membresias)){
+  membresias$nombre[k] <- ifelse(membresias$nombre[k]=="Vidal, Rossana",'Vidal, Loreto',membresias$nombre[k])
+  membresias$nombre[k] <- ifelse(membresias$nombre[k]=="Martín, Juan José",'Martin, Juan José',membresias$nombre[k])
+  membresias$nombre[k] <- ifelse(membresias$nombre[k]=="González, Dayana",'González, Dayyana',membresias$nombre[k])
+  membresias$nombre[k] <- ifelse(membresias$nombre[k]=="Zúñiga, Luis Arturo",'Zúñiga, Luis',membresias$nombre[k])
+}
+
+for(k in 1:NROW(veces)){
+  veces$nombre[k] <- ifelse(veces$nombre[k]=="Vidal, Rossana",'Vidal, Loreto',veces$nombre[k])
+  veces$nombre[k] <- ifelse(veces$nombre[k]=="Martín, Juan José",'Martin, Juan José',veces$nombre[k])
+  veces$nombre[k] <- ifelse(veces$nombre[k]=="González, Dayana",'González, Dayyana',veces$nombre[k])
+  veces$nombre[k] <- ifelse(veces$nombre[k]=="Zúñiga, Luis Arturo",'Zúñiga, Luis',veces$nombre[k])
+}
+
+atributos <- merge(atributos,membresias, by.x = "nombre", by.y = "nombre")
+
+colnames(atributos) <- c("nombre","id","convencional.x","region","distrito","zona_ppoo",
+                         "lista_o","lista","partido.x","voto_lista","voto_nombre",
+                         "pct_lista","pct_nombre","genero","nombre_reg","id.y","convencional.y",
+                         "Distrito","Lista","Partido","Domicilio_actual","lista_sept2021",
+                         "lista_actual","descripcion_abr22","militancia","partido.y")
+veces.x <- merge(atributos,veces)
+
+# porcentaje de veces que está en el bando ganador
+
+veces.x <- veces.x[veces.x$nombre!="Rojas, Rodrigo",]
+
+# veces.x$veces.pct <- round(100*as.numeric(veces.x$veces)/(base_votos-1),3)
+# veces.x$veces.pct2 <- round(100*as.numeric(veces.x$veces_tot)/(base_votos-1),3)
+
+
+# listados de pertenencia originales
+# l_cv <- veces.x[veces.x$lista=="CV",]
+# l_ad <- veces.x[veces.x$lista=="AD",]
+# l_nn <- veces.x[veces.x$lista=="NN",]
+# l_p <- veces.x[veces.x$lista=="P",]
+# l_ppoo <- veces.x[veces.x$lista=="PPOO",]
+# l_a <- veces.x[veces.x$lista=="A",]
+# 
+# veces.r <- matrix(c("CV","AD","NN","P","PPOO","A",NA,NA,NA,NA,NA,NA),byrow=F, ncol=2)
+# 
+# veces.r[1,2] <- round(mean(as.numeric(l_cv$veces))/NCOL(votos),3)
+# veces.r[2,2] <- round(mean(as.numeric(l_ad$veces))/NCOL(votos),3)
+# veces.r[3,2] <- round(mean(as.numeric(l_nn$veces))/NCOL(votos),3)
+# veces.r[4,2] <- round(mean(as.numeric(l_p$veces))/NCOL(votos),3)
+# veces.r[5,2] <- round(mean(as.numeric(l_ppoo$veces))/NCOL(votos),3)
+# veces.r[6,2] <- round(mean(as.numeric(l_a$veces))/NCOL(votos),3)
+
+
+veces.x <- veces.x[order(veces.x$eficacia_total, decreasing = T),]
+veces.x$eficacia_total <- gsub(",",".",veces.x$eficacia_total)
+veces.x$eficacia_total <- as.numeric(veces.x$eficacia_total)
+g_csoc <- veces.x[veces.x$lista_actual=="CSOC",]
+g_fa <- veces.x[veces.x$lista_actual=="FA",]
+g_sin <- veces.x[veces.x$lista_actual=="SIN",]
+g_msc <- veces.x[veces.x$lista_actual=="MSC",]
+g_nn <- veces.x[veces.x$lista_actual=="NN",]
+g_pcons <- veces.x[veces.x$lista_actual=="PCONS",]
+g_ind <- veces.x[veces.x$lista_actual=="IND",]
+g_cd <- veces.x[veces.x$lista_actual=="CD",]
+g_ccpp <- veces.x[veces.x$lista_actual=="CCPP",]
+g_pindig <- veces.x[veces.x$lista_actual=="P_INDIG",]
+g_a <- veces.x[veces.x$lista_actual=="A",]
+g_rnevo <- veces.x[veces.x$lista_actual=="RN-EVO",]
+g_cu <- veces.x[veces.x$lista_actual=="CU",]
+g_uxc <- veces.x[veces.x$lista_actual=="UxC",]
+g_cl <- veces.x[veces.x$lista_actual=="UDI+",]
+g_der <- veces.x[veces.x$lista_actual=="RN-EVO" | veces.x$lista_actual=="CU" | veces.x$lista_actual=="UxC" | veces.x$lista_actual=="CL" | veces.x$lista_actual=="UDI+",]
+
+m_csoc <- round(mean(g_csoc$eficacia_total, na.rm = T),3)
+m_fa <- round(mean(g_fa$eficacia_total, na.rm = T),3)
+m_der <- round(mean(g_der$eficacia_total, na.rm = T),3)
+m_msc <- round(mean(g_msc$eficacia_total, na.rm = T),3)
+m_nn <- round(mean(g_nn$eficacia_total, na.rm = T),3)
+m_pcons <- round(mean(g_pcons$eficacia_total, na.rm = T),3)
+m_cd <- round(mean(g_cd$eficacia_total, na.rm = T),3)
+m_ccpp <- round(mean(g_ccpp$eficacia_total, na.rm = T),3)
+```
+
+En la tabla siguiente se comparan las eficacias promedios de grupos seleccionados al votar. Como puede verse, la mayor eficacia al votar recae precisamente sobre el Frente Amplio y el Colectivo Socialista que el análisis pivotal ex-ante destacaba como los grupos que serían más gravitantes en la Convención.  
+
+```{r comparado_grupos2, echo=FALSE, include=TRUE}
+
+grupos <- c("Colectivo Socialista",m_csoc,
+  "Frente Amplio",m_fa,
+  "Chile Digno", m_cd,
+  "Movimientos Sociales",m_msc,
+  "No Neutrales", m_nn,
+  "Coor. Plurinacional", m_ccpp,
+  "Pueblo Constituyente",m_pcons,
+  "Derecha",m_der)
+
+g <- data.frame(matrix(grupos,nrow=8,ncol=2,byrow=T))
+colnames(g) <- c("Grupo","Eficacia al votar")
+g <- g[order(g$Eficacia, decreasing = T),]
+row.names(g) <- NULL
+g
+```
+
+Si bien como grupos el Frente Amplio y el Colectivo Socialista tienen la mayor eficacia, hay diferencias relevantes entre sus miembros. Estas se ven resumidas en los gráficos siguientes. 
+
+![Colectivo Socialista](D:/varios/convencion_constitucional/subproj/convencion_eficacia/plots/g_csoc.png)
+
+![Frente Amplio](D:/varios/convencion_constitucional/subproj/convencion_eficacia/plots/g_fa.png)
+
+# Conclusiones
+
+El análisis ex-ante y el análisis ex-post de los procesos de votación entregan información complementaria para entender las dinámicas de un cuerpo colegiado. En el caso de la Convención Constitucional se puede constatar que a medida que ésta se fue desplegando, los convencionales con mejor desempeño coinciden con los ubicados en posiciones de privilegio de acuerdo con un análisis de actores pivotales. Siendo consistente con lo anterior, el análisis ex-post permite además diferenciar entre actores más y menos relevantes dentro de sus grupos de pertenencia en la Convención. 
