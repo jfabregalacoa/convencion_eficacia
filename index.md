@@ -1,7 +1,7 @@
 ---
 title: "¿Han emitido su voto todas las señoras y señores convencionales? Estimación de la eficacia relativa al momento de votar de cada miembro de la Convención Constitucional"
 author: "Jorge Fábrega - CICS - Facultad de Gobierno - UDD \n Borrador"
-date: "20-05-2022"
+date: "23-05-2022"
 output: html_document
 ---
 
